@@ -16,6 +16,5 @@ private:
 	
 	IloNumVarArray y;
 	IloObjective objective;
-	IloRangeArray demandCons;
 };
 

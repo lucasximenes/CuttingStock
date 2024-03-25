@@ -4,7 +4,7 @@ Pricing::Pricing(const IloEnv& env, const CSPData& data) : env(env), subProblem(
 {
     subProblemSolver = IloCplex{ subProblem };
     auto len = data.orders.size();
-	y = IloNumVarArray(env, len, 0, 20);
+    y = IloNumVarArray(env, len, 0, 20, ILOINT);
     
     IloExpr obj{ env };
     for (int i = 0; i < len; i++)
@@ -15,20 +15,19 @@ Pricing::Pricing(const IloEnv& env, const CSPData& data) : env(env), subProblem(
     subProblem.add(objective);
     obj.end();
 
-	demandCons = IloRangeArray(env, len);
+    IloExpr con{ env };
     for (int i = 0; i < len; i++)
     {
-        IloExpr con{ env };
         con += data.orders[i].length * y[i];
-        demandCons[i] = IloRange{ con <= data.capacity };
     }
-    subProblem.add(demandCons);
+    IloRange capacityCon{ con <= data.capacity };
+    subProblem.add(capacityCon);
 }
 
 std::pair<bool, Pattern> Pricing::Solve(IloNumArray duals)
 {
     objective.setLinearCoefs(y, duals);
-    //subProblemSolver.exportModel("subProblem.lp");
+    subProblemSolver.exportModel("subProblem.lp");
     subProblemSolver.solve();
     IloNum objVal = subProblemSolver.getObjValue();
     Pattern newPattern(data.orders.size(), 0);
@@ -40,7 +39,7 @@ std::pair<bool, Pattern> Pricing::Solve(IloNumArray duals)
         for (int i = 0; i < data.orders.size(); i++)
         {
 			newPattern[i] = subProblemSolver.getValue(y[i]);
-            std::cout << newPattern[i] << ' ';
+            std::cout << "(" << subProblemSolver.getValue(y[i]) << ',' << newPattern[i] << ") ";
 		}
         std::cout << '\n';
 	}
