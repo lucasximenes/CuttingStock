@@ -1,6 +1,45 @@
 #include "ColumnGeneration.h"
 
-std::vector<Pattern> PricingSubproblem(const std::vector<double>& duals, const IloEnv& env, const std::vector<Pattern>& patterns, const CSPData& data)
+
+ColumnGeneration::ColumnGeneration(const CSPData& data)
+{
+    
+    master = IloModel(env);
+    cplex = IloCplex(master);
+    // Create initial patterns
+    patterns = data.GenerateInitialPatterns();
+
+    // Create the initial variables
+    lambda = IloNumVarArray(env, patterns.size(), 0, IloInfinity);
+
+    // Create the objective function
+    IloExpr obj{ env };
+    for (int i = 0; i < patterns.size(); i++)
+    {
+        obj += lambda[i];
+    }
+    master.add(IloMinimize(env, obj));
+    obj.end();
+
+    // Create the demand constraints
+    cons = IloRangeArray(env, data.orders.size());
+    for (int i = 0; i < data.orders.size(); i++)
+    {
+        IloExpr con{ env };
+        for (int j = 0; j < patterns.size(); j++)
+        {
+            con += patterns[j][i] * lambda[j];
+        }
+        cons[i] = IloRange{ con >= data.orders[i].demand };
+    }
+    master.add(cons);
+}
+ColumnGeneration::~ColumnGeneration()
+{
+    env.end();
+}
+
+std::vector<Pattern> ColumnGeneration::PricingSubproblem()
 {
     IloModel subModel{ env };
     IloIntVarArray y{ env, duals.size(), 0, 20 };
@@ -24,55 +63,14 @@ std::vector<Pattern> PricingSubproblem(const std::vector<double>& duals, const I
     return {};
 }
 
-ColumnGeneration::ColumnGeneration(const CSPData& data)
+void ColumnGeneration::Solve() 
 {
-    IloEnv env{};
-    IloModel master{ env };
-
-
-    // Create initial patterns
-    std::vector<Pattern> patterns{ data.GenerateInitialPatterns() };
-    /*for (auto& pattern : patterns)
-    {
-        std::cout << "Pattern: ";
-        for (auto& p : pattern)
-        {
-            std::cout << p << ' ';
-        }
-        std::cout << '\n';
-    }*/
-
-    // Create the initial variables
-    IloNumVarArray lambda{ env, patterns.size(), 0, IloInfinity };
-
-    // Create the objective function
-    IloExpr obj{ env };
-    for (int i = 0; i < patterns.size(); i++)
-    {
-        obj += lambda[i];
-    }
-    master.add(IloMinimize(env, obj));
-    obj.end();
-
-    // Create the demand constraints
-    IloRangeArray cons{ env, data.orders.size() };
-    for (int i = 0; i < data.orders.size(); i++)
-    {
-        IloExpr con{ env };
-        for (int j = 0; j < patterns.size(); j++)
-        {
-            con += patterns[j][i] * lambda[j];
-        }
-        cons[i] = IloRange{ con >= data.orders[i].demand };
-    }
-    master.add(cons);
 
     // Start column generation loop
     bool stop{ false };
     while (!stop)
     {
         // Solve the master problem
-        IloCplex cplex{ master };
         cplex.solve();
         std::cout << "Objective: " << cplex.getObjValue() << '\n';
 
