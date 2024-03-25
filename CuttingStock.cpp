@@ -9,12 +9,13 @@ int main()
 {
     CSPData data{ "data/Falkenauer_u120_00.txt" };
     std::cout << "Capacity: " << data.capacity << '\n';
-    for (auto& pattern : data.orders)
-    {
-        std::cout << "Length: " << pattern.length << " Demand: " << pattern.demand << '\n';
-    }
+    //for (auto& pattern : data.orders)
+    //{
+    //    std::cout << "Length: " << pattern.length << " Demand: " << pattern.demand << '\n';
+    //}
 
     ColumnGeneration cg(data);
+    cg.Solve();
     return 0;
 }
 
