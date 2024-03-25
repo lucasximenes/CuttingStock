@@ -22,11 +22,13 @@ Pricing::Pricing(const IloEnv& env, const CSPData& data) : env(env), subProblem(
         con += data.orders[i].length * y[i];
         demandCons[i] = IloRange{ con <= data.capacity };
     }
+    subProblem.add(demandCons);
 }
 
 std::pair<bool, Pattern> Pricing::Solve(IloNumArray duals)
 {
     objective.setLinearCoefs(y, duals);
+    //subProblemSolver.exportModel("subProblem.lp");
     subProblemSolver.solve();
     IloNum objVal = subProblemSolver.getObjValue();
     Pattern newPattern(data.orders.size(), 0);

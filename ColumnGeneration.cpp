@@ -47,6 +47,7 @@ void ColumnGeneration::Solve()
     bool stop{ false };
     std::cout << "Starting column generation\n";
     int iter{ 0 };
+    std::vector<double> dualAux(data.orders.size(), 0);
     while (!stop)
     {
         // Solve the master problem
@@ -56,10 +57,13 @@ void ColumnGeneration::Solve()
 
         // Get the dual values
         cplex.getDuals(duals, cons);
+        for (int i = 0; i < data.orders.size(); i++)
+        {
+			dualAux[i] = duals[i];
+		}
         std::pair<bool, Pattern> result{ pricing.Solve(duals) };
         if (result.first)
         {
-			patterns.push_back(result.second);
             IloNumColumn col = objective(1.0);
             for (int i = 0; i < data.orders.size(); i++)
             {
