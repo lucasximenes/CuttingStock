@@ -24,12 +24,18 @@
     <ClCompile Include="ColumnGeneration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Pricing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CSPData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ColumnGeneration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Pricing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

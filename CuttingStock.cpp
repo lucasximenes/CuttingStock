@@ -2,6 +2,7 @@
 //
 
 #include "CSPData.h"
+#include "ColumnGeneration.h"
 
 
 int main()
@@ -13,7 +14,7 @@ int main()
         std::cout << "Length: " << pattern.length << " Demand: " << pattern.demand << '\n';
     }
 
-    ColumnGeneration(data);
+    ColumnGeneration cg(data);
     return 0;
 }
 

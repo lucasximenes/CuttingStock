@@ -134,10 +134,12 @@
     <ClCompile Include="ColumnGeneration.cpp" />
     <ClCompile Include="CSPData.cpp" />
     <ClCompile Include="CuttingStock.cpp" />
+    <ClCompile Include="Pricing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ColumnGeneration.h" />
     <ClInclude Include="CSPData.h" />
+    <ClInclude Include="Pricing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

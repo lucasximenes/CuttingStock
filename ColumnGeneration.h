@@ -1,10 +1,5 @@
 #pragma once
-#include <iostream>
-#include <numeric>
-#include "CSPData.h"
-#include <ilcplex/ilocplex.h>
-
-#define EPSILON 1e-6
+#include "Pricing.h"
 
 
 class ColumnGeneration
@@ -13,17 +8,19 @@ public:
 	ColumnGeneration(const CSPData& data);
 	~ColumnGeneration();
 	void Solve();
-	std::vector<Pattern> PricingSubproblem();
 private:
 	IloEnv env;
 	IloModel master;
 	IloCplex cplex;
 	
+	IloObjective objective;
 	IloNumVarArray lambda;
 	IloRangeArray cons;
 	
 	CSPData data;
 	std::vector<Pattern> patterns;
-	std::vector<double> duals;
+	IloNumArray duals;
+
+	Pricing pricing;
 };
 

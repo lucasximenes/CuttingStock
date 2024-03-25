@@ -1,9 +1,8 @@
 #include "ColumnGeneration.h"
 
 
-ColumnGeneration::ColumnGeneration(const CSPData& data)
+ColumnGeneration::ColumnGeneration(const CSPData& data) : data(data), pricing(env, data)
 {
-    
     master = IloModel(env);
     cplex = IloCplex(master);
     // Create initial patterns
@@ -18,7 +17,8 @@ ColumnGeneration::ColumnGeneration(const CSPData& data)
     {
         obj += lambda[i];
     }
-    master.add(IloMinimize(env, obj));
+    objective = IloMinimize(env, obj);
+    master.add(objective);
     obj.end();
 
     // Create the demand constraints
@@ -33,34 +33,11 @@ ColumnGeneration::ColumnGeneration(const CSPData& data)
         cons[i] = IloRange{ con >= data.orders[i].demand };
     }
     master.add(cons);
+    duals = IloNumArray(env, data.orders.size());
 }
 ColumnGeneration::~ColumnGeneration()
 {
     env.end();
-}
-
-std::vector<Pattern> ColumnGeneration::PricingSubproblem()
-{
-    IloModel subModel{ env };
-    IloIntVarArray y{ env, duals.size(), 0, 20 };
-    IloExpr obj{ env };
-    for (int i = 0; i < duals.size(); i++)
-    {
-        obj += duals[i] * y[i];
-    }
-    IloRangeArray demandCons{ env, data.orders.size() };
-    for (int i = 0; i < data.orders.size(); i++)
-    {
-        IloExpr con{ env };
-        for (int j = 0; j < duals.size(); j++)
-        {
-            con += patterns[j][i] * y[j];
-        }
-        demandCons[i] = IloRange{ con >= data.orders[i].demand };
-    }
-
-
-    return {};
 }
 
 void ColumnGeneration::Solve() 
@@ -68,34 +45,33 @@ void ColumnGeneration::Solve()
 
     // Start column generation loop
     bool stop{ false };
+    std::cout << "Starting column generation\n";
+    int iter{ 0 };
     while (!stop)
     {
         // Solve the master problem
         cplex.solve();
+        std::cout << "Iteration: " << iter++ << '\n';
         std::cout << "Objective: " << cplex.getObjValue() << '\n';
 
         // Get the dual values
-        IloNumArray temp{ env };
-        std::vector<double> duals(lambda.getSize());
-        cplex.getDuals(temp, cons);
-        for (int i = 0; i < duals.size(); i++)
+        cplex.getDuals(duals, cons);
+        std::pair<bool, Pattern> result{ pricing.Solve(duals) };
+        if (result.first)
         {
-            duals[i] = temp[i];
-        }
-
-        bool hasNegativeDual = std::accumulate(duals.begin(), duals.end(), false, [](bool prevBool, double value) {
-            return prevBool || value < 0;
-            });
-
-        if (!hasNegativeDual)
-        {
-            std::cout << "Optimal solution found" << '\n';
-            stop = true;
-            break;
-        }
+			patterns.push_back(result.second);
+            IloNumColumn col = objective(1.0);
+            for (int i = 0; i < data.orders.size(); i++)
+            {
+				col += cons[i](result.second[i]);
+			}
+            lambda.add(IloNumVar(col, 0, IloInfinity, ILOFLOAT));
+		}
         else
-            // Solve the subproblem
-            std::vector<Pattern> newPatterns{ PricingSubproblem(duals, env, patterns, data) };
+        {
+			stop = true;
+		}
     }
+    std::cout << "Finished column generation\n";
 
 }
