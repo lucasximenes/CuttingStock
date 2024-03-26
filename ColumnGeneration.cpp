@@ -5,6 +5,7 @@ ColumnGeneration::ColumnGeneration(const CSPData& data) : data(data), pricing(en
 {
     master = IloModel(env);
     cplex = IloCplex(master);
+    cplex.setOut(env.getNullStream());
     // Create initial patterns
     patterns = data.GenerateInitialPatterns();
 
@@ -50,6 +51,7 @@ void ColumnGeneration::Solve()
     std::vector<double> dualAux(data.orders.size(), 0);
     while (!stop)
     {
+        //cplex.exportModel("master.lp");
         // Solve the master problem
         cplex.solve();
         std::cout << "Iteration: " << iter++ << '\n';

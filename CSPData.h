@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#define EPSILON 1e-6
+#define EPSILON 1e-4
 
 
 using Pattern = std::vector<int>;
