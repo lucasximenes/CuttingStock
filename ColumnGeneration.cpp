@@ -71,7 +71,7 @@ void ColumnGeneration::Solve()
             {
 				col += cons[i](result.second[i]);
 			}
-            lambda.add(IloNumVar(col, 0, IloInfinity, ILOFLOAT));
+            lambda.add(IloNumVar(col, 0, IloInfinity, IloNumVar::Float));
 		}
         else
         {

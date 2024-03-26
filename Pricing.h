@@ -15,6 +15,6 @@ private:
 	IloModel subProblem;
 	
 	IloNumVarArray y;
-	IloObjective objective;
+	IloObjective z;
 };
 

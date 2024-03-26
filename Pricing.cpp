@@ -12,8 +12,8 @@ Pricing::Pricing(const IloEnv& env, const CSPData& data) : env(env), subProblem(
     {
         obj += 1.0 * y[i];
     }
-    objective = IloMaximize(env, obj);
-    subProblem.add(objective);
+    z = IloMaximize(env, obj);
+    subProblem.add(z);
     obj.end();
 
     IloExpr con{ env };
@@ -27,7 +27,7 @@ Pricing::Pricing(const IloEnv& env, const CSPData& data) : env(env), subProblem(
 
 std::pair<bool, Pattern> Pricing::Solve(IloNumArray duals)
 {
-    objective.setLinearCoefs(y, duals);
+    z.setLinearCoefs(y, duals);
     //subProblemSolver.exportModel("subProblem.lp");
     subProblemSolver.solve();
     IloNum objVal = subProblemSolver.getObjValue();
@@ -37,14 +37,14 @@ std::pair<bool, Pattern> Pricing::Solve(IloNumArray duals)
     {
         improved = true;
         std::cout << "New pattern found!\n";
-        IloNum val = 0;
+        double val = 0;
         for (int i = 0; i < data.orders.size(); i++)
         {
             val = subProblemSolver.getValue(y[i]);
             if (val > EPSILON)
             {
                 std::cout << "Order " << i << ": " << val << " || ";
-                newPattern[i] = val;
+                newPattern[i] = (int)(ceil(val - EPSILON) + 0.5);
             }
 		}
         std::cout << '\n';
